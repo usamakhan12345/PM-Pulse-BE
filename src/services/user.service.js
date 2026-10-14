@@ -1,7 +1,11 @@
 const User = require('../models/User.model');
 const ApiError = require('../utils/apiError');
+const fs = require('fs');
+const path = require('path');
+const { avatarsDir } = require('../middleware/avatar.middleware');
 
 class UserService {
+  // Only the platform admin may list everyone (see the admin routes)
   async getAllUsers(search) {
     const query = {};
     if (search) {
@@ -11,24 +15,6 @@ class UserService {
       ];
     }
     return await User.find(query).select('-password').sort({ name: 1 });
-  }
-
-  async updateUserRole(targetUserId, newRole) {
-    if (!['ADMIN', 'MANAGER', 'EMPLOYEE'].includes(newRole)) {
-      throw ApiError.badRequest('Invalid role value');
-    }
-
-    const user = await User.findByIdAndUpdate(
-      targetUserId,
-      { role: newRole },
-      { new: true }
-    ).select('-password');
-
-    if (!user) {
-      throw ApiError.notFound('User not found');
-    }
-
-    return user;
   }
 
   async updateProfile(userId, { name, avatar }) {
@@ -46,5 +32,26 @@ class UserService {
     return userObj;
   }
 }
+
+// Delete a previously uploaded local avatar file (ignores external URLs)
+const removeLocalAvatar = (avatarUrl) => {
+  if (!avatarUrl || !avatarUrl.startsWith('/uploads/avatars/')) return;
+  const filePath = path.join(avatarsDir, path.basename(avatarUrl));
+  fs.unlink(filePath, () => {});
+};
+
+UserService.prototype.setAvatar = async function (userId, file) {
+  const user = await User.findById(userId);
+  if (!user) {
+    if (file) fs.unlink(file.path, () => {});
+    throw ApiError.notFound('User not found');
+  }
+  removeLocalAvatar(user.avatar);
+  user.avatar = file ? `/uploads/avatars/${file.filename}` : '';
+  await user.save();
+  const userObj = user.toObject();
+  delete userObj.password;
+  return userObj;
+};
 
 module.exports = new UserService();

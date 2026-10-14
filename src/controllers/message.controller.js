@@ -4,7 +4,7 @@ const ApiResponse = require('../utils/apiResponse');
 class MessageController {
   async sendMessage(req, res, next) {
     try {
-      const message = await messageService.sendMessage(req.user._id, req.body);
+      const message = await messageService.sendMessage(req.user, req.body);
 
       const io = req.app.get('socketio');
       if (io) {
@@ -21,7 +21,7 @@ class MessageController {
     try {
       const { projectId } = req.params;
       const { limit, before } = req.query;
-      const messages = await messageService.getProjectMessages(projectId, limit, before);
+      const messages = await messageService.getProjectMessages(req.user, projectId, limit, before);
       return ApiResponse.success(res, { messages }, 'Project messages retrieved');
     } catch (error) {
       next(error);

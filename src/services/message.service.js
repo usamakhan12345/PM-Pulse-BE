@@ -1,32 +1,30 @@
 const Message = require('../models/Message.model');
-const Project = require('../models/Project.model');
-const ApiError = require('../utils/apiError');
+const accessService = require('./access.service');
 
 class MessageService {
-  async sendMessage(senderId, { projectId, workspaceId, content }) {
-    const project = await Project.findById(projectId);
-    if (!project) {
-      throw ApiError.notFound('Project not found');
-    }
+  async sendMessage(user, { projectId, content }) {
+    // Only people on the project can write in its chat
+    const { project } = await accessService.requireProject(user, projectId);
 
     const message = await Message.create({
       projectId,
-      workspaceId: workspaceId || project.workspaceId,
-      senderId,
+      workspaceId: project.workspaceId,
+      senderId: user._id,
       content
     });
 
-    return await message.populate('senderId', 'name email avatar role');
+    return await message.populate('senderId', 'name email avatar');
   }
 
-  async getProjectMessages(projectId, limit = 50, before) {
+  async getProjectMessages(user, projectId, limit = 50, before) {
+    await accessService.requireProject(user, projectId);
     const query = { projectId };
     if (before) {
       query.createdAt = { $lt: new Date(before) };
     }
 
     const messages = await Message.find(query)
-      .populate('senderId', 'name email avatar role')
+      .populate('senderId', 'name email avatar')
       .sort({ createdAt: -1 })
       .limit(parseInt(limit, 10));
 

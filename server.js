@@ -3,6 +3,7 @@ const { Server } = require('socket.io');
 const app = require('./src/app');
 const env = require('./src/config/env');
 const connectDB = require('./src/config/db');
+const { ensureAdminUser, runMigrations } = require('./src/config/bootstrap');
 const initSockets = require('./src/sockets/socketHandler');
 
 const server = http.createServer(app);
@@ -25,9 +26,11 @@ initSockets(io);
 // Connect Database & Start Server
 const startServer = async () => {
   await connectDB();
+  await runMigrations();
+  await ensureAdminUser();
   server.listen(env.PORT, () => {
     console.log(`===================================================`);
-    console.log(` Jira + Slack SaaS Backend Server Running!`);
+    console.log(` PulsePM API Server Running!`);
     console.log(` Environment: ${env.NODE_ENV}`);
     console.log(` HTTP Server: http://localhost:${env.PORT}`);
     console.log(` Socket.io Ready`);

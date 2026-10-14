@@ -39,13 +39,13 @@ class AttachmentService {
       .sort({ createdAt: -1 });
   }
 
-  async deleteAttachment(attachmentId, userId, userRole) {
+  async deleteAttachment(attachmentId, userId, isWorkspaceOwner) {
     const attachment = await Attachment.findById(attachmentId);
     if (!attachment) {
       throw ApiError.notFound('Attachment not found');
     }
 
-    if (attachment.uploadedBy.toString() !== userId.toString() && !['ADMIN', 'MANAGER'].includes(userRole)) {
+    if (attachment.uploadedBy.toString() !== userId.toString() && !isWorkspaceOwner) {
       throw ApiError.forbidden('Not authorized to delete this attachment');
     }
 

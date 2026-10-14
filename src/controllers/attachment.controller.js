@@ -26,7 +26,7 @@ class AttachmentController {
 
   async deleteAttachment(req, res, next) {
     try {
-      const result = await attachmentService.deleteAttachment(req.params.id, req.user._id, req.user.role);
+      const result = await attachmentService.deleteAttachment(req.params.id, req.user._id, req.access.isOwner);
       return ApiResponse.success(res, result, 'Attachment deleted');
     } catch (error) {
       next(error);

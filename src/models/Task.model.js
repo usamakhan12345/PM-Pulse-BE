@@ -53,6 +53,17 @@ const TaskSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
+    // Who last assigned the task to its current assignee
+    assignedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    // Set when the task moves to DONE, cleared when it moves back
+    completedAt: {
+      type: Date,
+      default: null
+    },
     labels: [
       {
         type: String,

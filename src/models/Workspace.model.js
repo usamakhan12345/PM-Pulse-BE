@@ -27,6 +27,13 @@ const WorkspaceSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
       index: true
+    },
+    // Secret part of the shareable join link. Anyone with the link can join as a member.
+    inviteToken: {
+      type: String,
+      select: false,
+      index: true,
+      sparse: true
     }
   },
   {

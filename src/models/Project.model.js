@@ -31,6 +31,11 @@ const ProjectSchema = new mongoose.Schema(
         ref: 'User'
       }
     ],
+    // Open projects are visible to everyone in the workspace. Private ones only to the people on them.
+    isPrivate: {
+      type: Boolean,
+      default: false
+    },
     status: {
       type: String,
       enum: ['PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'ARCHIVED'],

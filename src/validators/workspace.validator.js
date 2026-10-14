@@ -10,13 +10,12 @@ const updateWorkspaceSchema = z.object({
   description: z.string().optional()
 });
 
-const addMemberSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
-  role: z.enum(['ADMIN', 'MANAGER', 'EMPLOYEE']).optional().default('EMPLOYEE')
+const inviteSchema = z.object({
+  email: z.string().email('Enter a valid email address')
 });
 
 module.exports = {
   createWorkspaceSchema,
   updateWorkspaceSchema,
-  addMemberSchema
+  inviteSchema
 };

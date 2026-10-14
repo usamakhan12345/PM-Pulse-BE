@@ -1,10 +1,11 @@
 const taskService = require('../services/task.service');
 const ApiResponse = require('../utils/apiResponse');
+const ApiError = require('../utils/apiError');
 
 class TaskController {
   async createTask(req, res, next) {
     try {
-      const task = await taskService.createTask(req.user._id, req.body);
+      const task = await taskService.createTask(req.user._id, req.body, req.project);
 
       // Emit socket event if io instance attached
       const io = req.app.get('socketio');
@@ -31,7 +32,8 @@ class TaskController {
         page,
         limit,
         sortBy,
-        sortOrder
+        sortOrder,
+        user: req.user
       });
       return ApiResponse.success(res, { tasks }, 'Tasks retrieved', 200, pagination);
     } catch (error) {
@@ -65,11 +67,16 @@ class TaskController {
 
   async deleteTask(req, res, next) {
     try {
+      // Owners can delete any task; everyone else only the tasks they created
+      const isCreator = String(req.task.createdBy) === String(req.user._id);
+      if (!req.access.isOwner && !isCreator) {
+        throw ApiError.forbidden('Only the workspace owner or the task creator can delete this task');
+      }
       const result = await taskService.deleteTask(req.params.id, req.user._id);
 
       const io = req.app.get('socketio');
       if (io) {
-        io.emit('task:deleted', { taskId: req.params.id });
+        io.to(`project_${req.task.projectId}`).emit('task:deleted', { taskId: req.params.id });
       }
 
       return ApiResponse.success(res, result, 'Task deleted');

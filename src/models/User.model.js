@@ -26,8 +26,9 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['ADMIN', 'MANAGER', 'EMPLOYEE'],
-      default: 'EMPLOYEE'
+      // ADMIN is the platform owner. Everyone else is a USER and gets rights from a workspace role.
+      enum: ['ADMIN', 'USER'],
+      default: 'USER'
     },
     avatar: {
       type: String,
@@ -49,7 +50,8 @@ const UserSchema = new mongoose.Schema(
 
 // Hash password before save
 UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
+  // Sign-up stores an already hashed password until the email code is verified
+  if (!this.isModified('password') || this.$locals.passwordAlreadyHashed) {
     return next();
   }
   const salt = await bcrypt.genSalt(10);

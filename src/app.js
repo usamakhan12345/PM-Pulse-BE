@@ -15,6 +15,8 @@ const activityRoutes = require('./routes/activity.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const messageRoutes = require('./routes/message.routes');
 const userRoutes = require('./routes/user.routes');
+const invitationRoutes = require('./routes/invitation.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 
@@ -51,6 +53,8 @@ app.use('/api/activities', activityRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/invitations', invitationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

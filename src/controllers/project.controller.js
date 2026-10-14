@@ -1,10 +1,11 @@
 const projectService = require('../services/project.service');
+const reportService = require('../services/report.service');
 const ApiResponse = require('../utils/apiResponse');
 
 class ProjectController {
   async createProject(req, res, next) {
     try {
-      const project = await projectService.createProject(req.user._id, req.body);
+      const project = await projectService.createProject(req.user, req.body);
       return ApiResponse.created(res, { project }, 'Project created successfully');
     } catch (error) {
       next(error);
@@ -16,13 +17,21 @@ class ProjectController {
       const { workspaceId, search, status, page, limit } = req.query;
       const { projects, pagination } = await projectService.getProjects({
         workspaceId,
-        userId: req.user._id,
+        user: req.user,
         search,
         status,
         page,
         limit
       });
       return ApiResponse.success(res, { projects }, 'Projects retrieved', 200, pagination);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async downloadReport(req, res, next) {
+    try {
+      await reportService.streamProjectReport(req.params.id, req.user, res);
     } catch (error) {
       next(error);
     }

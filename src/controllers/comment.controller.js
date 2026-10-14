@@ -37,7 +37,7 @@ class CommentController {
 
   async deleteComment(req, res, next) {
     try {
-      const result = await commentService.deleteComment(req.params.id, req.user._id, req.user.role);
+      const result = await commentService.deleteComment(req.params.id, req.user._id, req.access.isOwner);
       return ApiResponse.success(res, result, 'Comment deleted successfully');
     } catch (error) {
       next(error);

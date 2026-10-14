@@ -5,7 +5,25 @@ class AuthController {
   async register(req, res, next) {
     try {
       const data = await authService.register(req.body);
-      return ApiResponse.created(res, data, 'User registered successfully');
+      return ApiResponse.success(res, data, 'Verification code sent');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyOtp(req, res, next) {
+    try {
+      const data = await authService.verifySignup(req.body);
+      return ApiResponse.created(res, data, 'Account created successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async resendOtp(req, res, next) {
+    try {
+      const data = await authService.resendSignupOtp(req.body);
+      return ApiResponse.success(res, data, 'Verification code sent');
     } catch (error) {
       next(error);
     }
@@ -36,7 +54,7 @@ class AuthController {
   async forgotPassword(req, res, next) {
     try {
       const result = await authService.forgotPassword(req.body.email);
-      return ApiResponse.success(res, result, 'Reset token generated');
+      return ApiResponse.success(res, result, 'Verification code sent');
     } catch (error) {
       next(error);
     }
@@ -44,7 +62,7 @@ class AuthController {
 
   async resetPassword(req, res, next) {
     try {
-      const result = await authService.resetPassword(req.body.token, req.body.password);
+      const result = await authService.resetPassword(req.body);
       return ApiResponse.success(res, result, 'Password reset successful');
     } catch (error) {
       next(error);

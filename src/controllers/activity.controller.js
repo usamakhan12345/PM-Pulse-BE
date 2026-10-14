@@ -5,7 +5,7 @@ class ActivityController {
   async getActivities(req, res, next) {
     try {
       const { workspaceId, projectId, limit } = req.query;
-      const activities = await activityService.getActivities({ workspaceId, projectId, limit });
+      const activities = await activityService.getActivities({ workspaceId, projectId, limit, user: req.user });
       return ApiResponse.success(res, { activities }, 'Activities retrieved');
     } catch (error) {
       next(error);

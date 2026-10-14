@@ -1,6 +1,7 @@
 const ApiError = require('../utils/apiError');
 const WorkspaceMember = require('../models/WorkspaceMember.model');
 
+// Platform level: only the listed global roles (ADMIN, USER) may continue.
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -8,25 +9,26 @@ const authorizeRoles = (...allowedRoles) => {
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      return next(
-        ApiError.forbidden(
-          `User role '${req.user.role}' is not authorized to perform this action. Required: ${allowedRoles.join(', ')}`
-        )
-      );
+      return next(ApiError.forbidden('You do not have permission to do this'));
     }
     next();
   };
 };
 
-const checkWorkspaceRole = (...allowedRoles) => {
+// Workspace level: the caller must be an active member of the workspace with one of the listed
+// roles (OWNER, MEMBER). The platform ADMIN passes every check.
+const authorizeWorkspaceRoles = (resolveWorkspaceId, ...allowedRoles) => {
   return async (req, res, next) => {
     try {
-      const workspaceId = req.params.workspaceId || req.body.workspaceId || req.query.workspaceId;
-      if (!workspaceId) {
-        return next(ApiError.badRequest('Workspace ID is required for authorization check'));
+      if (!req.user) {
+        return next(ApiError.unauthorized());
       }
 
-      // System ADMIN gets global bypass
+      const workspaceId = await resolveWorkspaceId(req);
+      if (!workspaceId) {
+        return next(ApiError.badRequest('Workspace ID is required'));
+      }
+
       if (req.user.role === 'ADMIN') {
         return next();
       }
@@ -38,19 +40,14 @@ const checkWorkspaceRole = (...allowedRoles) => {
       });
 
       if (!membership) {
-        return next(ApiError.forbidden('You are not an active member of this workspace'));
+        return next(ApiError.forbidden('You are not a member of this workspace'));
+      }
+
+      if (!allowedRoles.includes(membership.role)) {
+        return next(ApiError.forbidden('Only the workspace owner can do this'));
       }
 
       req.workspaceMember = membership;
-
-      if (!allowedRoles.includes(membership.role)) {
-        return next(
-          ApiError.forbidden(
-            `Workspace role '${membership.role}' is not authorized for this action. Required: ${allowedRoles.join(', ')}`
-          )
-        );
-      }
-
       next();
     } catch (err) {
       next(err);
@@ -58,7 +55,13 @@ const checkWorkspaceRole = (...allowedRoles) => {
   };
 };
 
+// Ways to find the workspace a request is about
+const workspaceFromParam = (req) => req.params.id;
+const workspaceFromBody = (req) => req.body.workspaceId;
+
 module.exports = {
   authorizeRoles,
-  checkWorkspaceRole
+  authorizeWorkspaceRoles,
+  workspaceFromParam,
+  workspaceFromBody
 };

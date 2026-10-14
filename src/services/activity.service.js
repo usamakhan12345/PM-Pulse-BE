@@ -1,4 +1,5 @@
 const Activity = require('../models/Activity.model');
+const accessService = require('./access.service');
 
 class ActivityService {
   async logActivity({ workspaceId, projectId = null, taskId = null, userId, action, metadata = {} }) {
@@ -17,10 +18,22 @@ class ActivityService {
     }
   }
 
-  async getActivities({ workspaceId, projectId, limit = 30 }) {
+  async getActivities({ workspaceId, projectId, limit = 30, user }) {
     const query = {};
     if (workspaceId) query.workspaceId = workspaceId;
     if (projectId) query.projectId = projectId;
+
+    // People only see activity of projects they can access
+    if (user) {
+      const allowed = await accessService.accessibleProjectIds(user, workspaceId);
+      if (allowed) {
+        if (projectId) {
+          if (!allowed.map(String).includes(String(projectId))) query.projectId = { $in: [] };
+        } else {
+          query.projectId = { $in: allowed };
+        }
+      }
+    }
 
     const activities = await Activity.find(query)
       .populate('userId', 'name email avatar role')

@@ -7,6 +7,7 @@ const createProjectSchema = z.object({
   startDate: z.string().optional().nullable(),
   dueDate: z.string().optional().nullable(),
   status: z.enum(['PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'ARCHIVED']).optional().default('ACTIVE'),
+  isPrivate: z.boolean().optional().default(false),
   members: z.array(z.string()).optional().default([])
 });
 
@@ -16,6 +17,7 @@ const updateProjectSchema = z.object({
   status: z.enum(['PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'ARCHIVED']).optional(),
   startDate: z.string().optional().nullable(),
   dueDate: z.string().optional().nullable(),
+  isPrivate: z.boolean().optional(),
   members: z.array(z.string()).optional()
 });
 

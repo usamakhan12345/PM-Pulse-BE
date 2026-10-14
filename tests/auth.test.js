@@ -7,7 +7,7 @@ describe('Auth API Endpoints', () => {
     // If MongoDB is reachable, connect; otherwise test handles validation schema unit testing
     if (mongoose.connection.readyState === 0) {
       try {
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/jira_slack_clone', {
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/pulsepm', {
           serverSelectionTimeoutMS: 2000
         });
       } catch (err) {

@@ -64,13 +64,13 @@ class CommentService {
     return await comment.populate('userId', 'name email avatar role');
   }
 
-  async deleteComment(commentId, userId, userRole) {
+  async deleteComment(commentId, userId, isWorkspaceOwner) {
     const comment = await Comment.findById(commentId);
     if (!comment) {
       throw ApiError.notFound('Comment not found');
     }
 
-    if (comment.userId.toString() !== userId.toString() && !['ADMIN', 'MANAGER'].includes(userRole)) {
+    if (comment.userId.toString() !== userId.toString() && !isWorkspaceOwner) {
       throw ApiError.forbidden('Not authorized to delete this comment');
     }
 
